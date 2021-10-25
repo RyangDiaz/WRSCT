@@ -1,5 +1,5 @@
 import cv2
-gray_image = cv2.imread("radar_img_2.jpg", cv2.IMREAD_GRAYSCALE)
+gray_image = cv2.imread("/Users/ryandiaz/Documents/WRSCT/radar_img_2.jpg", cv2.IMREAD_GRAYSCALE)
 background_thresh = 211
 cell_thresh = 195
 maxValue = 255
