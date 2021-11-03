@@ -24,9 +24,12 @@ def hsv_thresh(filepath):
     img = cv2.imread(filepath)
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     cv2.imshow('orig', img)
-    cv2.imshow('hsv', hsv_img)
+    #Modified values of S and V to avoid including background
     thresh = cv2.inRange(hsv_img, (15,90,90), (36,255,255))
     cv2.imshow('threshed', thresh)
+    #Converts binary image back into portions of original image 
+    yel_mask = cv2.bitwise_and(img, img, mask=thresh)
+    cv2.imshow('yells', yel_mask)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
