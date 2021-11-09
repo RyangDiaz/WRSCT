@@ -2,25 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-#Original threshold processing
-def bw_threshold(filepath):
-    gray_image = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
-    background_thresh = 211
-    cell_thresh = 195
-    maxValue = 255
-
-    #Remove background - threshold based on color instead?
-    th, dst = cv2.threshold(gray_image, background_thresh, maxValue, cv2.THRESH_TOZERO_INV)
-
-    #Isolate yellow cells
-    th2, dst2 = cv2.threshold(dst, cell_thresh, maxValue, cv2.THRESH_BINARY)
-    cv2.imshow('oldimg', gray_image)
-    cv2.imshow('newimg', dst2)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-def hsv_thresh(filepath):
-    img = cv2.imread(filepath)
+def hsv_thresh(img):
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     ## mask of yellow (15,0,0) ~ (36, 255, 255)
     # Modified values of S and V to avoid including background
@@ -32,10 +14,26 @@ def hsv_thresh(filepath):
     mask = yel_thresh + red_thresh1 + red_thresh2
     #Converts binary image back into portions of original image
     total_thresh = cv2.bitwise_and(img, img, mask=mask)
-    cv2.imshow('orig', img)
-    cv2.imshow('result', total_thresh)
+    # cv2.imshow('orig', img)
+    display_img(total_thresh)
+    return total_thresh
+
+def find_contours(img):
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    th, thresh_img = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY)
+    contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contour_img = cv2.drawContours(image=img, contours=contours, contourIdx=-1, color=(0,255,0), thickness=2)
+    display_img(contour_img)
+    return contours #Returns list 
+
+    
+# For use in image display and debugging
+def display_img(img):
+    cv2.imshow('img', img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    
+    
 
 #For later use in vector plotting
 def plot_point(filepath, x, y):
@@ -45,5 +43,13 @@ def plot_point(filepath, x, y):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+if __name__ == '__main__':
+    filepath = 'radar.jpg'
+    img = cv2.imread(filepath)
+    display_img(img)
+    threshed = hsv_thresh(img)
+    contours = find_contours(threshed)
+    orig_contours = cv2.drawContours(image=img, contours=contours, contourIdx=-1, color=(0,255,0), thickness=2)
+    display_img(orig_contours)
 
 
