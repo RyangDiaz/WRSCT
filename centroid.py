@@ -43,7 +43,7 @@ def plot_point(img, x, y):
     return img 
 
 if __name__ == '__main__':
-    filepath = 'radar.jpg'
+    filepath = input('Name of img: ')
     img = cv2.imread(filepath)
     display_img(img)
     threshed = hsv_thresh(img)
