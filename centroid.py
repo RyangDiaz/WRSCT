@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Isolates cells of interest, turns background to black
 def hsv_thresh(img):
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     ## mask of yellow (15,0,0) ~ (36, 255, 255)
@@ -18,6 +19,7 @@ def hsv_thresh(img):
     display_img(total_thresh)
     return total_thresh
 
+# Finds contours of cells of interest (should call hsv_thresh first)
 def find_contours(img):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     th, thresh_img = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY)
@@ -33,15 +35,12 @@ def display_img(img):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
-    
 
 #For later use in vector plotting
-def plot_point(filepath, x, y):
-    img = cv2.imread(filepath)
+def plot_point(img, x, y):
     img = cv2.circle(img, (x, y), radius=10, color=(0, 0, 255), thickness=-1)
-    cv2.imshow('plotted', img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    display_img(img)
+    return img 
 
 if __name__ == '__main__':
     filepath = 'radar.jpg'
