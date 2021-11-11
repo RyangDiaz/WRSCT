@@ -72,7 +72,7 @@ def read_image():
         cv2.imshow("gif", imgs[i])
         if cv2.waitKey(100)&0xFF == 27:
             break
-        i = (i+1)%nums
+        i = (i+1) % nums
     cv2.destroyAllWindows()
     return imgs
 
