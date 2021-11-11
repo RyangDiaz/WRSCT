@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import imageio
+import urllib.request
 
 # Isolates cells of interest, turns background to black
 def hsv_thresh(img):
@@ -36,11 +38,40 @@ def display_img(img):
     cv2.destroyAllWindows()
     
 
-#For later use in vector plotting
+# For later use in vector plotting
 def plot_point(img, x, y):
     img = cv2.circle(img, (x, y), radius=10, color=(0, 0, 255), thickness=-1)
     display_img(img)
-    return img 
+    return img
+
+# Prototype for scraping image files
+def read_image():
+    url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/stc/animate.png"
+    fname = "test.gif"
+
+    ## Read the gif from the web, save to the disk
+    imdata = urllib.request.urlopen(url).read()
+    imbytes = bytearray(imdata)
+    open(fname,"wb+").write(imdata)
+
+    ## Read the gif from disk to `RGB`s using `imageio.miread` 
+    gif = imageio.mimread(fname)
+    nums = len(gif)
+    print("Total {} frames in the gif!".format(nums))
+
+    # convert form RGB to BGR 
+    imgs = [cv2.cvtColor(img, cv2.COLOR_RGB2BGR) for img in gif]
+
+    ## Display the gif
+    i = 0
+
+    while True:
+        cv2.imshow("gif", imgs[i])
+        if cv2.waitKey(100)&0xFF == 27:
+            break
+        i = (i+1)%nums
+    cv2.destroyAllWindows()
+    return imgs
 
 if __name__ == '__main__':
     filepath = input('Name of img: ')
