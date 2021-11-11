@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imageio
 import urllib.request
+import os
 
 # Isolates cells of interest, turns background to black
 def hsv_thresh(img):
@@ -56,6 +57,8 @@ def read_image():
 
     ## Read the gif from disk to `RGB`s using `imageio.miread` 
     gif = imageio.mimread(fname)
+    # May not remove depending on working directory of program
+    os.remove(fname)
     nums = len(gif)
     print("Total {} frames in the gif!".format(nums))
 
