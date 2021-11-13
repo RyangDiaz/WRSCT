@@ -21,7 +21,7 @@ def simplify_img(img):
 # Removes county/state lines in colored cells, returns a modified mask (binary image)
 def remove_lines(img):
     # Kernel shape is a cross due to rigid horizontal/vertical nature of borders
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(2,2))
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
 
     # Closing = Dilation + Erosion
     removed = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
