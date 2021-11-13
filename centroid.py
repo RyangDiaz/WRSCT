@@ -9,24 +9,26 @@ import os
 import copy
 ###^^^^^
 
-### Functions to write
-
-## Determine whether to use winter masking or summer masking 
-def detect_winter():
-    pass
-
-## Color masking based on winter (includes green and blue)
-def hsv_thresh_winter(img):
-    pass
-
+#====================== Functions to write ======================#
 
 ## Merge together groups of smaller cells, simplifies general shape of cells 
 def simplify_img(img):
     pass
 
-###
 
-# Isolates cells of interest, turns background to black
+
+
+# Removes county/state lines in colored cells, returns a modified mask (binary image)
+def remove_lines(img):
+    # Kernel shape is a cross due to rigid horizontal/vertical nature of borders
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(2,2))
+
+    # Closing = Dilation + Erosion
+    removed = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+    
+    return removed
+
+# Isolates cells of interest, returns storm cell shapes for contour detection purposes
 def hsv_thresh(img):
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     
@@ -36,33 +38,37 @@ def hsv_thresh(img):
     ## mask of red (0, 0, 0) ~ (10, 255, 255) AND (170, 0, 0) ~ (180, 255, 255)
     red_thresh1 = cv2.inRange(hsv_img, (0,120,120), (10,255,255))
     red_thresh2 = cv2.inRange(hsv_img, (170,120,120), (180,255,255))
+    ## mask of blue (100,0,0) ~ (140, 255, 255)
+    blu_thresh = cv2.inRange(hsv_img, (90,200,200), (115,255,255))
     
     # Total mask for yellow and red colors
-    mask = yel_thresh + red_thresh1 + red_thresh2
+    mask = remove_lines(yel_thresh + red_thresh1 + red_thresh2 + blu_thresh)
+    
     
     # Converts binary image back into portions of original image
-    total_thresh = cv2.bitwise_and(img, img, mask=mask)
+    #total_thresh = cv2.bitwise_and(img, img, mask=mask)
 
     ## Display image (for testing purposes)
     '''
     display_img(total_thresh)
     '''
     ###^^^
-    return total_thresh
+    
+    return mask
 
-# Finds contours of cells of interest (should call hsv_thresh first)
+# Finds contours of cells of interest (should call hsv_thresh first) [EDIT: Assume that input image is already binary]
 def find_contours(img):
     
-    ###### For testing purposes (display original contours)
+    ###### For testing purposes (display original contours) - Used to determine size threshold
     #other_img = copy.deepcopy(img)
     ######^^^^^
 
     # Image preprocessing for contour finding
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    th, thresh_img = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY)
+    #gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #th, thresh_img = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY)
 
     # Finds all contours of image 
-    contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     
     ## For testing purposes (display original contours)
     #before_contour_img = cv2.drawContours(image=other_img, contours=contours, contourIdx=-1, color=(0,255,0), thickness=2)
@@ -72,7 +78,7 @@ def find_contours(img):
     # Remove smaller contours to reduce number of relevant cells
     acceptable_contours = []
     for contour in contours:
-        if cv2.contourArea(contour) > 100: # Arbitrary threshold, determined through testing 
+        if cv2.contourArea(contour) > 50: # Arbitrary threshold, determined through testing 
             acceptable_contours.append(contour)
 
     ## Displays image (for testing purposes)
@@ -82,7 +88,7 @@ def find_contours(img):
     '''
     ###^^^^^
     
-    return acceptable_contours #Returns list
+    return acceptable_contours # Returns list
 
     
 # For use in image display and debugging
@@ -100,12 +106,9 @@ def plot_point(img, x, y):
 
 # Prototype for scraping image files
 def read_image():
-    url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/stc/animate.png" #<<< True link
-
-    ### TEST LINK    
-    #url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/jef/animate-yesterday.png"
-
-    
+    # Default: Saint Paul, MN Intellicast Radar 
+    url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/stc/animate.png"
+    #url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/cad/animate.png"
     fname = "test.gif"
 
     ## Read the gif from the web, save to the disk
@@ -115,25 +118,19 @@ def read_image():
 
     ## Read the gif from disk to `RGB`s using `imageio.miread` 
     gif = imageio.mimread(fname)
-    # May not remove depending on working directory of program
+    
+    # Remove written file - May not remove depending on working directory of program
     os.remove(fname)
     nums = len(gif)
     print("Total {} frames in the gif!".format(nums))
 
-    # convert form RGB to BGR 
+    # Convert form RGB to BGR 
     imgs = [cv2.cvtColor(img, cv2.COLOR_RGB2BGR) for img in gif]
 
-    ## Display the gif
-    '''
-    i = 0
-
-    while True:
-        cv2.imshow("gif", imgs[i])
-        if cv2.waitKey(100)&0xFF == 27:
-            break
-        i = (i+1) % nums
-    cv2.destroyAllWindows()
-    '''
+    # Crop top part out of images
+    for i in range(len(imgs)):
+        imgs[i] = imgs[i][22:,:]
+    
     return imgs
 
 if __name__ == '__main__':
