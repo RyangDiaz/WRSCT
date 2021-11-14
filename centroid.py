@@ -106,10 +106,44 @@ def plot_point(img, x, y):
 
 # Prototype for scraping image files
 def read_image():
-    # Default: Saint Paul, MN Intellicast Radar 
-    url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/stc/animate.png"
-    #url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/cad/animate.png"
-    fname = "test.gif"
+    # Default: Saint Paul, MN Intellicast Radar ("stc")
+    locations = {
+        "California": "bfl",
+        "New York": "bgm",
+        "New Hampshire": "bml",
+        "Texas": "bro",
+        "Kentucky": "bwg",
+        "Michigan": "cad",
+        "North Carolina": "clt",
+        "Georgia": "csg",
+        "Ohio": "day",
+        "Colorado": "den",
+        "Iowa": "dsm",
+        "Florida": "pie",
+        "Virginia": "fcx",
+        "Connecticut": "hfd",
+        "Missouri": "jef",
+        "Oklahoma": "law",
+        "Nebraska": "lbf",
+        "Arkansas": "lit",
+        "Louisiana": "msy",
+        "Idaho": "myl",
+        "South Dakota": "pir",
+        "Arizona": "prc",
+        "Utah": "pvu",
+        "Oregon": "rdm",
+        "Wyoming": "riw",
+        "Nevada": "rno",
+        "New Mexico": "row",
+        "Kansas": "sln",
+        "Illinois": "spi",
+        "Minnesota": "stc",
+        "Washington": "tiw",
+        "Mississippi": "tvr"
+        }
+    state = "Minnesota"
+    url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/{}/animate.png".format(locations[state])
+    fname = "radarloop.gif"
 
     ## Read the gif from the web, save to the disk
     imdata = urllib.request.urlopen(url).read()
