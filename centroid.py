@@ -16,7 +16,7 @@ def simplify_img(img):
     pass
 
 
-
+# Test: Edit from PyCharm
 
 # Removes county/state lines in colored cells, returns a modified mask (binary image)
 def remove_lines(img):
