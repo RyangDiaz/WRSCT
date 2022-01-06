@@ -5,90 +5,57 @@ import imageio
 import urllib.request
 import os
 
-### For testing purposes
-import copy
-###^^^^^
+## Important color tuples and constant values
+struct_ele_size = (3, 3) # For detail/cell blurring and line removal
+
+yellow_lower = (15, 90, 90)
+yellow_higher = (36, 255, 255)
+red_lower_A = (0, 120, 120) # Red range wraps across HSV value boundaries for Hue
+red_higher_A = (10, 255, 255)
+red_lower_B = (170, 120, 120)
+red_higher_B = (180, 255, 255)
+blue_lower = (90, 200, 200)
+blue_higher = (115, 255, 255)
 
 #====================== Functions to write ======================#
 
-## Merge together groups of smaller cells, simplifies general shape of cells 
+# Merge together groups of smaller cells, simplifies general shape of cells
 def simplify_img(img):
     pass
-
-
-# Test: Edit from PyCharm
 
 # Removes county/state lines in colored cells, returns a modified mask (binary image)
 def remove_lines(img):
     # Kernel shape is a cross due to rigid horizontal/vertical nature of borders
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
-
-    # Closing = Dilation + Erosion
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, struct_ele_size)
     removed = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
-    
     return removed
 
 # Isolates cells of interest, returns storm cell shapes for contour detection purposes
 def hsv_thresh(img):
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    
-    ## mask of yellow (15,0,0) ~ (36, 255, 255)
-    # Modified values of S and V to avoid including background
-    yel_thresh = cv2.inRange(hsv_img, (15,90,90), (36,255,255)) 
-    ## mask of red (0, 0, 0) ~ (10, 255, 255) AND (170, 0, 0) ~ (180, 255, 255)
-    red_thresh1 = cv2.inRange(hsv_img, (0,120,120), (10,255,255))
-    red_thresh2 = cv2.inRange(hsv_img, (170,120,120), (180,255,255))
-    ## mask of blue (100,0,0) ~ (140, 255, 255)
-    blu_thresh = cv2.inRange(hsv_img, (90,200,200), (115,255,255))
-    
-    # Total mask for yellow and red colors
-    mask = remove_lines(yel_thresh + red_thresh1 + red_thresh2 + blu_thresh)
-    
-    
-    # Converts binary image back into portions of original image
-    #total_thresh = cv2.bitwise_and(img, img, mask=mask)
 
-    ## Display image (for testing purposes)
-    '''
-    display_img(total_thresh)
-    '''
-    ###^^^
-    
+    # Creating components of color mask (include red, yellow, and blue colors)
+    yel_thresh = cv2.inRange(hsv_img, yellow_lower, yellow_higher)
+    red_thresh1 = cv2.inRange(hsv_img, red_lower_A, red_higher_A)
+    red_thresh2 = cv2.inRange(hsv_img, red_lower_B, red_higher_B)
+    blu_thresh = cv2.inRange(hsv_img, blue_lower, blue_higher)
+
+    mask = remove_lines(yel_thresh + red_thresh1 + red_thresh2 + blu_thresh)
     return mask
 
-# Finds contours of cells of interest (should call hsv_thresh first) [EDIT: Assume that input image is already binary]
+# Finds contours of cells of interest [Assume that input image is already binary]
+# Returns a list of relevant contours in the image
 def find_contours(img):
-    
-    ###### For testing purposes (display original contours) - Used to determine size threshold
-    #other_img = copy.deepcopy(img)
-    ######^^^^^
-
-    # Image preprocessing for contour finding
-    #gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    #th, thresh_img = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY)
-
     # Finds all contours of image 
     contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    
-    ## For testing purposes (display original contours)
-    #before_contour_img = cv2.drawContours(image=other_img, contours=contours, contourIdx=-1, color=(0,255,0), thickness=2)
-    #display_img(before_contour_img)
-    ######^^^^
     
     # Remove smaller contours to reduce number of relevant cells
     acceptable_contours = []
     for contour in contours:
         if cv2.contourArea(contour) > 50: # Arbitrary threshold, determined through testing 
             acceptable_contours.append(contour)
-
-    ## Displays image (for testing purposes)
-    '''
-    contour_img = cv2.drawContours(image=img, contours=acceptable_contours, contourIdx=-1, color=(0,255,0), thickness=2)
-    display_img(contour_img)
-    '''
-    ###^^^^^
     
-    return acceptable_contours # Returns list
+    return acceptable_contours
 
     
 # For use in image display and debugging
@@ -145,25 +112,24 @@ def read_image():
     url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/{}/animate.png".format(locations[state])
     fname = "radarloop.gif"
 
-    ## Read the gif from the web, save to the disk
+    # Read the gif from the web, save to the disk
     imdata = urllib.request.urlopen(url).read()
-    imbytes = bytearray(imdata)
-    open(fname,"wb+").write(imdata)
+    open(fname, "wb+").write(imdata)
 
-    ## Read the gif from disk to `RGB`s using `imageio.miread` 
+    # Read the gif from disk to `RGB`s using `imageio.miread`
     gif = imageio.mimread(fname)
     
     # Remove written file - May not remove depending on working directory of program
     os.remove(fname)
     nums = len(gif)
-    print("Total {} frames in the gif!".format(nums))
+    print("Total {} frames in the gif!".format(nums), "\nCurrent Location:", state)
 
     # Convert form RGB to BGR 
     imgs = [cv2.cvtColor(img, cv2.COLOR_RGB2BGR) for img in gif]
 
     # Crop top part out of images
     for i in range(len(imgs)):
-        imgs[i] = imgs[i][22:,:]
+        imgs[i] = imgs[i][22:, :]
     
     return imgs
 
