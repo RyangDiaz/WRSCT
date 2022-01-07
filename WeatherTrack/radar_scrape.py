@@ -1,3 +1,5 @@
+# Reads in the radar images taken from WU radar loop and converts into list of imgs
+
 import os
 import imageio
 import urllib.request
