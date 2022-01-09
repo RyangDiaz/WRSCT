@@ -5,7 +5,7 @@ import imageio
 import urllib.request
 
 # Prototype for scraping image files
-def read_image():
+def read_image(state):
     # Default: Saint Paul, MN Intellicast Radar ("stc")
     locations = {
         "California": "bfl",
@@ -41,7 +41,8 @@ def read_image():
         "Washington": "tiw",
         "Mississippi": "tvr"
     }
-    state = "Minnesota"
+    if state not in locations:
+        state = "Minnesota"
     url = "https://s.w-x.co/staticmaps/wu/wxtype/county_loc/{}/animate.png".format(locations[state])
     fname = "radarloop.gif"
 
