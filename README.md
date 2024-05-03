@@ -7,7 +7,7 @@ The intention of this program is to track the movements of visible storm cells a
 
 `python WeatherTrack/contours.py`
 
-The program will prompt you for a location code. Refer to this table to figure out the correct code based on the location you want to view!
+The program will prompt you for a location. If no state is input, the default will be "Minnesota". Refer to this table for valid location choices based on the state you want to view!
 
 | State | Location Code |
 | ---   | --- |
